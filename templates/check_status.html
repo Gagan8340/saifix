@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Check Status{% endblock %}
+
+{% block content %}
+<section class="hero hero-sm">
+    <h1>Check Repair Status</h1>
+    <p>Enter your mobile number to view the status of your repair request.</p>
+</section>
+
+<section class="section">
+    <div class="form-wrapper">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('check_status') }}" class="repair-form">
+            <div class="form-group">
+                <label for="mobile_number">Mobile Number</label>
+                <div class="mobile-input-wrapper">
+                    <span class="mobile-prefix">+91</span>
+                    <input type="tel" id="mobile_number" name="mobile_number" placeholder="Enter 10-digit mobile number" maxlength="10" value="{{ mobile_display }}" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Check Status</button>
+        </form>
+
+        {% if results %}
+        <div class="status-results">
+            <h2 class="section-title">Your Repair Requests</h2>
+            {% for req in results %}
+            <div class="status-card status-card-{{ req['status']|lower|replace(' ', '-') }}">
+                <div class="status-card-header">
+                    <span class="status-badge status-badge-{{ req['status']|lower|replace(' ', '-') }}">{{ req['status'] }}</span>
+                    <span class="status-date">{{ req['request_time'][:16] if req['request_time'] else '' }}</span>
+                </div>
+                <div class="status-card-body">
+                    <div class="status-detail">
+                        <span class="status-label">Appliance</span>
+                        <span class="status-value">{{ req['appliance_type'] }}</span>
+                    </div>
+                    <div class="status-detail">
+                        <span class="status-label">Problem</span>
+                        <span class="status-value">{{ req['problem_type'] }}</span>
+                    </div>
+                    {% if req['technician_name'] %}
+                    <div class="status-detail">
+                        <span class="status-label">Technician Assigned</span>
+                        <span class="status-value">{{ req['technician_name'] }}</span>
+                    </div>
+                    <div class="status-detail">
+                        <span class="status-label">Technician Phone</span>
+                        <span class="status-value"><a href="tel:{{ req['technician_phone'] }}">📞 {{ req['technician_phone'] }}</a></span>
+                    </div>
+                    {% endif %}
+                    {% if req['completed_time'] %}
+                    <div class="status-detail">
+                        <span class="status-label">Completed On</span>
+                        <span class="status-value">{{ req['completed_time'][:16] }}</span>
+                    </div>
+                    {% endif %}
+                    {% if req['status'] == 'Cancelled' and req['cancel_reason'] %}
+                    <div class="status-detail cancel-info">
+                        <span class="status-label">Cancellation Reason</span>
+                        <span class="status-value">{{ req['cancel_reason'] }}</span>
+                    </div>
+                    {% if req['cancel_description'] %}
+                    <div class="status-detail cancel-info">
+                        <span class="status-label">Message from Shop</span>
+                        <span class="status-value">{{ req['cancel_description'] }}</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    {% if req['admin_message'] %}
+                    <div class="status-detail advice-info">
+                        <span class="status-label">&#9993; Advice from Shop</span>
+                        <span class="status-value">{{ req['admin_message'] }}</span>
+                    </div>
+                    {% endif %}
+                    {% if req['image_path'] %}
+                    <div class="status-detail">
+                        <span class="status-label">Photo</span>
+                        <a href="{{ url_for('static', filename=req['image_path']) }}" target="_blank">
+                            <img src="{{ url_for('static', filename=req['image_path']) }}" class="status-thumb" alt="Appliance photo">
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

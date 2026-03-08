@@ -5,7 +5,10 @@
 {% block content %}
 <div class="dashboard-header">
     <h1>Admin Dashboard</h1>
-    <p>Welcome, {{ session.get('admin_name', 'Admin') }} &nbsp;|&nbsp; <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a></p>
+    <p>Welcome, {{ session.get('admin_name', 'Admin') }} &nbsp;|&nbsp;
+        <a href="{{ url_for('manage_technicians') }}" class="logout-link">Manage Technicians</a> &nbsp;|&nbsp;
+        <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a>
+    </p>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -22,12 +25,16 @@
     <!-- Summary Cards -->
     <div class="summary-cards">
         <div class="summary-card summary-pending">
-            <h3>{{ pending_requests|length }}</h3>
-            <p>Pending Requests</p>
+            <h3>{{ active_requests|length }}</h3>
+            <p>Active Requests</p>
         </div>
         <div class="summary-card summary-completed">
             <h3>{{ completed_requests|length }}</h3>
             <p>Completed</p>
+        </div>
+        <div class="summary-card summary-technicians">
+            <h3>{{ technicians|length }}</h3>
+            <p>Technicians</p>
         </div>
         <div class="summary-card">
             <h3>{{ spare_parts|length }}</h3>
@@ -35,40 +42,88 @@
         </div>
     </div>
 
-    <!-- Pending Repair Requests -->
+    <!-- Active Repair Requests -->
     <div class="dash-section">
-        <h2 class="dash-section-title">&#128221; Pending Requests</h2>
-        {% if pending_requests %}
+        <h2 class="dash-section-title">&#128221; Active Requests</h2>
+        {% if active_requests %}
         <div class="table-responsive">
             <table class="dash-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Customer Name</th>
-                        <th>Mobile Number</th>
-                        <th>Appliance Type</th>
-                        <th>Problem Type</th>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Appliance</th>
+                        <th>Problem</th>
+                        <th>Image</th>
                         <th>Address</th>
+                        <th>Status</th>
+                        <th>Technician</th>
                         <th>Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for req in pending_requests %}
+                    {% for req in active_requests %}
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>{{ req['customer_name'] }}</td>
                         <td>{{ req['mobile_number'] }}</td>
                         <td>{{ req['appliance_type'] }}</td>
-                        <td>{{ req['problem_type'] }}</td>
+                        <td>
+                            {{ req['problem_type'] }}
+                        </td>
+                        <td>
+                            {% if req['image_path'] %}
+                            <a href="{{ url_for('static', filename=req['image_path']) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=req['image_path']) }}" class="thumb-img" alt="Photo">
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
                         <td>{{ req['address'] }}</td>
-                        <td>{{ req['request_time'] }}</td>
-                        <td class="action-btns">
-                            <form method="POST" action="{{ url_for('complete_request', id=req['id']) }}" onsubmit="return confirm('Mark this request as completed?');">
-                                <button type="submit" class="btn-complete" title="Mark as Completed">&#10003;</button>
+                        <td>
+                            <form method="POST" action="{{ url_for('update_request_status', id=req['id']) }}" class="inline-form">
+                                <select name="status" onchange="handleStatusChange(this, {{ req['id'] }})" class="status-select status-{{ req['status']|lower|replace(' ', '-') }}">
+                                    {% for s in ['Pending', 'Technician Assigned', 'In Progress', 'Completed'] %}
+                                    <option value="{{ s }}" {% if req['status'] == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
                             </form>
-                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this request permanently?');">
-                                <button type="submit" class="btn-delete" title="Delete">&#10005;</button>
+                        </td>
+                        <td>
+                            {% if req['technician_name'] %}
+                                <span class="tech-badge">{{ req['technician_name'] }}</span>
+                                <div class="tech-phone">📞 {{ req['technician_phone'] }}</div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('assign_technician', id=req['id']) }}" class="inline-form">
+                                    <select name="technician_id" class="assign-select" onchange="this.form.submit()">
+                                        <option value="">Assign...</option>
+                                        {% for tech in technicians %}
+                                        <option value="{{ tech['id'] }}">{{ tech['name'] }} ({{ tech['current_workload'] }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td class="nowrap">{{ req['request_time'][:16] if req['request_time'] else '' }}</td>
+                        <td class="action-btns">
+                            {% if req['technician_name'] %}
+                            <form method="POST" action="{{ url_for('assign_technician', id=req['id']) }}" class="inline-form" title="Reassign">
+                                <select name="technician_id" class="assign-select-sm" onchange="this.form.submit()">
+                                    <option value="">Reassign</option>
+                                    {% for tech in technicians %}
+                                    <option value="{{ tech['id'] }}">{{ tech['name'] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('complete_request', id=req['id']) }}" onsubmit="return confirm('Mark as completed?');">
+                                <button type="submit" class="btn-complete" title="Complete">&#10003;</button>
+                            </form>
+                            <button type="button" class="btn-cancel" title="Cancel Request" onclick="openCancelModal({{ req['id'] }})">&#10007;</button>
+                            <button type="button" class="btn-message" title="Send Advice" onclick="openMessageModal({{ req['id'] }})">&#9993;</button>
+                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('DELETE permanently?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
                             </form>
                         </td>
                     </tr>
@@ -77,7 +132,7 @@
             </table>
         </div>
         {% else %}
-        <p class="empty-msg">No pending requests. All caught up! &#127881;</p>
+        <p class="empty-msg">No active requests. All caught up! &#127881;</p>
         {% endif %}
     </div>
 
@@ -90,10 +145,10 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Customer Name</th>
-                        <th>Mobile Number</th>
-                        <th>Appliance Type</th>
-                        <th>Problem Type</th>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Appliance</th>
+                        <th>Technician</th>
                         <th>Requested</th>
                         <th>Completed</th>
                         <th>Action</th>
@@ -106,12 +161,12 @@
                         <td>{{ req['customer_name'] }}</td>
                         <td>{{ req['mobile_number'] }}</td>
                         <td>{{ req['appliance_type'] }}</td>
-                        <td>{{ req['problem_type'] }}</td>
-                        <td>{{ req['request_time'] }}</td>
-                        <td>{{ req['completed_time'] }}</td>
+                        <td>{{ req['technician_name'] or '—' }}</td>
+                        <td class="nowrap">{{ req['request_time'][:16] if req['request_time'] else '' }}</td>
+                        <td class="nowrap">{{ req['completed_time'][:16] if req['completed_time'] else '' }}</td>
                         <td>
-                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this completed record?');">
-                                <button type="submit" class="btn-delete" title="Delete">&#10005;</button>
+                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this record?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
                             </form>
                         </td>
                     </tr>
@@ -124,11 +179,51 @@
         {% endif %}
     </div>
 
+    <!-- Cancelled Requests -->
+    {% if cancelled_requests %}
+    <div class="dash-section">
+        <h2 class="dash-section-title">&#10060; Cancelled Requests</h2>
+        <div class="table-responsive">
+            <table class="dash-table table-cancelled">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Appliance</th>
+                        <th>Cancel Reason</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in cancelled_requests %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ req['customer_name'] }}</td>
+                        <td>{{ req['mobile_number'] }}</td>
+                        <td>{{ req['appliance_type'] }}</td>
+                        <td><span class="cancel-reason-badge">{{ req['cancel_reason'] or '—' }}</span></td>
+                        <td>{{ req['cancel_description'] or '—' }}</td>
+                        <td class="nowrap">{{ req['request_time'][:16] if req['request_time'] else '' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete permanently?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Spare Parts Section -->
     <div class="dash-section">
         <h2 class="dash-section-title">Spare Parts Inventory</h2>
 
-        <!-- Add Spare Part Form -->
         <div class="add-form-card">
             <h3>Add New Spare Part</h3>
             <form method="POST" action="{{ url_for('add_spare_part') }}" class="add-form">
@@ -179,5 +274,233 @@
         <p class="empty-msg">No spare parts in inventory.</p>
         {% endif %}
     </div>
+
+    <!-- Service Analytics -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">&#128202; Service Analytics</h2>
+        <div class="analytics-summary" id="analytics-summary">
+            <div class="analytics-stat">
+                <span class="analytics-number" id="stat-total">—</span>
+                <span class="analytics-label">Total Requests</span>
+            </div>
+            <div class="analytics-stat">
+                <span class="analytics-number" id="stat-completed">—</span>
+                <span class="analytics-label">Completed Jobs</span>
+            </div>
+        </div>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Most Repaired Appliance</h3>
+                <canvas id="chartAppliance"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Monthly Service Requests</h3>
+                <canvas id="chartMonthly"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Technician Workload</h3>
+                <canvas id="chartWorkload"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Request Status Distribution</h3>
+                <canvas id="chartStatus"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    const COLORS = ['#1B5E20','#D4A017','#1565c0','#6a1b9a','#e65100','#c62828','#00897b','#5d4037'];
+    const STATUS_COLORS = {
+        'Pending': '#e65100',
+        'Technician Assigned': '#1565c0',
+        'In Progress': '#6a1b9a',
+        'Completed': '#2e7d32',
+        'Cancelled': '#c62828'
+    };
+
+    fetch('{{ url_for("analytics_data") }}')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('stat-total').textContent = data.total_requests;
+            document.getElementById('stat-completed').textContent = data.completed_jobs;
+
+            // Appliance chart (doughnut)
+            new Chart(document.getElementById('chartAppliance'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.appliance_labels,
+                    datasets: [{
+                        data: data.appliance_counts,
+                        backgroundColor: COLORS.slice(0, data.appliance_labels.length)
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Monthly chart (bar)
+            new Chart(document.getElementById('chartMonthly'), {
+                type: 'bar',
+                data: {
+                    labels: data.month_labels,
+                    datasets: [{
+                        label: 'Requests',
+                        data: data.month_counts,
+                        backgroundColor: '#1B5E20',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Technician workload (bar horizontal)
+            new Chart(document.getElementById('chartWorkload'), {
+                type: 'bar',
+                data: {
+                    labels: data.tech_labels,
+                    datasets: [{
+                        label: 'Active Jobs',
+                        data: data.tech_counts,
+                        backgroundColor: '#1565c0',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Status distribution (pie)
+            new Chart(document.getElementById('chartStatus'), {
+                type: 'pie',
+                data: {
+                    labels: data.status_labels,
+                    datasets: [{
+                        data: data.status_counts,
+                        backgroundColor: data.status_labels.map(s => STATUS_COLORS[s] || '#999')
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        })
+        .catch(err => console.error('Analytics load failed:', err));
+})();
+</script>
+
+<!-- Cancel Request Modal -->
+<div class="modal-overlay" id="cancelModal" onclick="if(event.target===this)closeCancelModal()">
+    <div class="modal-box cancel-modal">
+        <div class="modal-header">
+            <strong>&#10060; Cancel Request</strong>
+            <button class="modal-close-btn" onclick="closeCancelModal()">&times;</button>
+        </div>
+        <form id="cancelForm" method="POST">
+            <div class="modal-form-group">
+                <label for="cancelReason">Select Reason</label>
+                <select name="cancel_reason" id="cancelReason" required onchange="toggleCustomReason(this)">
+                    <option value="">— Choose a reason —</option>
+                    <option value="High risk repair">High risk repair</option>
+                    <option value="Not our service area">Not our service area</option>
+                    <option value="Appliance brand requires authorized service">Appliance brand requires authorized service</option>
+                    <option value="Major internal damage">Major internal damage</option>
+                    <option value="Parts not available">Parts not available</option>
+                    <option value="Customer not reachable">Customer not reachable</option>
+                    <option value="__custom__">Other (custom reason)</option>
+                </select>
+                <input type="text" id="customReasonInput" class="modal-input" placeholder="Enter custom reason..." style="display:none; margin-top:0.5rem;">
+            </div>
+            <div class="modal-form-group">
+                <label for="cancelDesc">Additional Explanation (optional)</label>
+                <textarea name="cancel_description" id="cancelDesc" class="modal-textarea" rows="3" placeholder="e.g. This refrigerator compressor requires authorized brand service. Please contact the official service center."></textarea>
+            </div>
+            <button type="submit" class="btn-confirm-cancel">Confirm Cancellation</button>
+        </form>
+    </div>
+</div>
+
+<!-- Admin Message Modal -->
+<div class="modal-overlay" id="messageModal" onclick="if(event.target===this)closeMessageModal()">
+    <div class="modal-box message-modal">
+        <div class="modal-header">
+            <strong>&#9993; Send Advice to Customer</strong>
+            <button class="modal-close-btn" onclick="closeMessageModal()">&times;</button>
+        </div>
+        <form id="messageForm" method="POST">
+            <div class="modal-form-group">
+                <label>Quick Messages</label>
+                <div class="quick-msg-btns">
+                    <button type="button" class="quick-msg-btn" onclick="setMsg('Your appliance requires an authorized brand service center. Please contact the official service center.')">Authorized Service</button>
+                    <button type="button" class="quick-msg-btn" onclick="setMsg('Our technician will visit within 24 hours. Please keep the appliance ready for inspection.')">Technician Visit</button>
+                    <button type="button" class="quick-msg-btn" onclick="setMsg('The spare part has been ordered. We will update you once it arrives.')">Part Ordered</button>
+                    <button type="button" class="quick-msg-btn" onclick="setMsg('Your repair is estimated to cost more than the appliance value. We recommend purchasing a new unit.')">Cost Advisory</button>
+                </div>
+            </div>
+            <div class="modal-form-group">
+                <label for="adminMsg">Your Message</label>
+                <textarea name="admin_message" id="adminMsg" class="modal-textarea" rows="3" placeholder="Type your advice or message to the customer..." required></textarea>
+            </div>
+            <button type="submit" class="btn-send-msg">&#9993; Send Message</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCancelModal(id){
+    document.getElementById('cancelForm').action = '/admin/requests/cancel/' + id;
+    document.getElementById('cancelReason').value = '';
+    document.getElementById('cancelDesc').value = '';
+    document.getElementById('customReasonInput').style.display = 'none';
+    document.getElementById('cancelModal').classList.add('show');
+}
+function closeCancelModal(){
+    document.getElementById('cancelModal').classList.remove('show');
+}
+function toggleCustomReason(sel){
+    var ci = document.getElementById('customReasonInput');
+    if(sel.value === '__custom__'){
+        ci.style.display = 'block';
+        ci.required = true;
+        ci.focus();
+    } else {
+        ci.style.display = 'none';
+        ci.required = false;
+        ci.value = '';
+    }
+}
+document.getElementById('cancelForm').addEventListener('submit', function(e){
+    var sel = document.getElementById('cancelReason');
+    if(sel.value === '__custom__'){
+        var cv = document.getElementById('customReasonInput').value.trim();
+        if(!cv){ e.preventDefault(); alert('Please enter a custom reason.'); return; }
+        // Replace select value with the custom text
+        var opt = sel.querySelector('option[value="__custom__"]');
+        opt.value = cv;
+        sel.value = cv;
+    }
+});
+
+function openMessageModal(id){
+    document.getElementById('messageForm').action = '/admin/requests/message/' + id;
+    document.getElementById('adminMsg').value = '';
+    document.getElementById('messageModal').classList.add('show');
+}
+function closeMessageModal(){
+    document.getElementById('messageModal').classList.remove('show');
+}
+function setMsg(txt){
+    document.getElementById('adminMsg').value = txt;
+}
+function handleStatusChange(sel, id){
+    sel.form.submit();
+}
+</script>
 {% endblock %}

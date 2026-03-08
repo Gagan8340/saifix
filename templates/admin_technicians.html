@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Manage Technicians{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Technician Management</h1>
+    <p>
+        <a href="{{ url_for('admin_dashboard') }}" class="logout-link">&larr; Back to Dashboard</a> &nbsp;|&nbsp;
+        <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a>
+    </p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="dashboard-content">
+    <!-- Add Technician -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">Add New Technician</h2>
+        <div class="add-form-card">
+            <form method="POST" action="{{ url_for('add_technician') }}" class="add-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Technician Name</label>
+                        <input type="text" id="name" name="name" placeholder="e.g. Ravi Kumar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" placeholder="e.g. 9876543210" required>
+                    </div>
+                    <div class="form-group form-btn-group">
+                        <button type="submit" class="btn-add">+ Add Technician</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Technicians List -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">All Technicians ({{ technicians|length }})</h2>
+        {% if technicians %}
+        <div class="table-responsive">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                        <th>Workload</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tech in technicians %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('edit_technician', id=tech['id']) }}" class="inline-edit-form" id="edit-form-{{ tech['id'] }}">
+                                <input type="text" name="name" value="{{ tech['name'] }}" class="edit-input" required>
+                        </td>
+                        <td>
+                                <input type="tel" name="phone_number" value="{{ tech['phone_number'] }}" class="edit-input" required>
+                        </td>
+                        <td>
+                                <select name="status" class="status-select tech-status-{{ tech['status']|lower|replace(' ', '-') }}">
+                                    <option value="Available" {% if tech['status'] == 'Available' %}selected{% endif %}>Available</option>
+                                    <option value="Busy" {% if tech['status'] == 'Busy' %}selected{% endif %}>Busy</option>
+                                    <option value="On Leave" {% if tech['status'] == 'On Leave' %}selected{% endif %}>On Leave</option>
+                                </select>
+                        </td>
+                        <td class="workload-cell">
+                            <span class="workload-badge">{{ tech['current_workload'] }}</span>
+                            </form>
+                        </td>
+                        <td class="action-btns">
+                            <button type="submit" form="edit-form-{{ tech['id'] }}" class="btn-complete" title="Save Changes">&#10003;</button>
+                            <form method="POST" action="{{ url_for('delete_technician', id=tech['id']) }}" onsubmit="return confirm('Delete this technician? They will be unassigned from all requests.');">
+                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No technicians added yet. Add your first technician above.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

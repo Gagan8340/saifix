@@ -643,6 +643,699 @@ img {
     transform: scale(1.1);
 }
 
+/* Cancel Button */
+.btn-cancel {
+    background: #e65100;
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-cancel:hover {
+    background: #bf360c;
+    transform: scale(1.1);
+}
+
+/* Inline Forms */
+.inline-form {
+    display: inline;
+}
+
+/* Status Dropdown */
+.status-select {
+    padding: 0.3rem 0.5rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--white);
+    transition: var(--transition);
+}
+.status-select:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+.status-select.status-pending {
+    color: #e65100;
+    border-color: #e65100;
+}
+.status-select.status-technician-assigned {
+    color: #1565c0;
+    border-color: #1565c0;
+}
+.status-select.status-in-progress {
+    color: #6a1b9a;
+    border-color: #6a1b9a;
+}
+.status-select.status-completed {
+    color: #2e7d32;
+    border-color: #2e7d32;
+}
+.status-select.status-cancelled {
+    color: #c62828;
+    border-color: #c62828;
+}
+
+/* Assign Technician Dropdown */
+.assign-select, .assign-select-sm {
+    padding: 0.3rem 0.4rem;
+    border: 2px solid #1565c0;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: #e3f2fd;
+    color: #1565c0;
+    font-weight: 500;
+    max-width: 130px;
+}
+.assign-select-sm {
+    max-width: 100px;
+    font-size: 0.75rem;
+    border-color: #90a4ae;
+    background: #eceff1;
+    color: #546e7a;
+}
+
+/* Technician Badge */
+.tech-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.tech-phone {
+    font-size: 0.78rem;
+    color: #1B5E20;
+    margin-top: 0.2rem;
+    font-weight: 500;
+}
+
+/* Nowrap for dates */
+.nowrap {
+    white-space: nowrap;
+}
+
+/* Technicians summary card */
+.summary-technicians {
+    border-top-color: #1565c0;
+}
+.summary-technicians h3 {
+    color: #1565c0;
+}
+
+/* Cancelled Table */
+.table-cancelled thead th {
+    background: #bf360c;
+}
+.table-cancelled tbody tr {
+    opacity: 0.7;
+}
+.table-cancelled tbody tr:hover {
+    opacity: 1;
+}
+
+/* Inline Edit Fields (Technician Page) */
+.inline-edit-form {
+    display: contents;
+}
+.edit-input {
+    padding: 0.35rem 0.6rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    width: 100%;
+    min-width: 100px;
+    transition: var(--transition);
+}
+.edit-input:focus {
+    border-color: var(--gold);
+    outline: none;
+}
+
+/* Technician Status Colors */
+.tech-status-available {
+    color: #2e7d32;
+    border-color: #2e7d32;
+}
+.tech-status-busy {
+    color: #e65100;
+    border-color: #e65100;
+}
+.tech-status-on-leave {
+    color: #c62828;
+    border-color: #c62828;
+}
+
+/* Workload Badge */
+.workload-badge {
+    display: inline-block;
+    background: var(--dark-green);
+    color: var(--white);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.workload-cell {
+    text-align: center;
+}
+
+/* ----- Customer Status Check Page ----- */
+.status-results {
+    margin-top: 2rem;
+}
+.status-results .section-title {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+.status-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    border-left: 5px solid #ccc;
+}
+.status-card-pending {
+    border-left-color: #e65100;
+}
+.status-card-technician-assigned {
+    border-left-color: #1565c0;
+}
+.status-card-in-progress {
+    border-left-color: #6a1b9a;
+}
+.status-card-completed {
+    border-left-color: #2e7d32;
+}
+.status-card-cancelled {
+    border-left-color: #c62828;
+}
+.status-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.status-badge {
+    display: inline-block;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--white);
+    background: #999;
+}
+.status-badge-pending {
+    background: #e65100;
+}
+.status-badge-technician-assigned {
+    background: #1565c0;
+}
+.status-badge-in-progress {
+    background: #6a1b9a;
+}
+.status-badge-completed {
+    background: #2e7d32;
+}
+.status-badge-cancelled {
+    background: #c62828;
+}
+.status-date {
+    font-size: 0.85rem;
+    color: #888;
+}
+.status-card-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+}
+.status-detail {
+    display: flex;
+    flex-direction: column;
+}
+.status-label {
+    font-size: 0.78rem;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.15rem;
+}
+.status-value {
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* ----- File Upload ----- */
+.file-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.file-input-hidden {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+.upload-options {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.upload-option-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border: 2px solid var(--dark-green);
+    border-radius: 8px;
+    background: #e8f5e9;
+    color: var(--dark-green);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.upload-option-btn:hover {
+    background: var(--dark-green);
+    color: var(--white);
+}
+.camera-btn {
+    border-color: #1565c0;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+.camera-btn:hover {
+    background: #1565c0;
+    color: var(--white);
+}
+.file-upload-preview {
+    max-width: 200px;
+}
+.upload-preview-img {
+    width: 100%;
+    max-width: 200px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+}
+.preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 200px;
+}
+.preview-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+.preview-btn {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.retake-btn {
+    background: #1565c0;
+    color: var(--white);
+}
+.retake-btn:hover {
+    background: #0d47a1;
+}
+.delete-btn {
+    background: #c62828;
+    color: var(--white);
+}
+.delete-btn:hover {
+    background: #b71c1c;
+}
+
+
+/* ----- Camera Modal ----- */
+
+/* ----- Generic Modal ----- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay.show {
+    display: flex;
+}
+.modal-box {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 1.5rem 1.8rem;
+    min-width: 300px;
+    max-width: 420px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    position: relative;
+    animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 0.5rem;
+}
+.modal-header strong {
+    color: #1565c0;
+    font-size: 1rem;
+}
+.modal-close-btn {
+    cursor: pointer;
+    font-size: 1.4rem;
+    color: #999;
+    background: none;
+    border: none;
+    line-height: 1;
+}
+.modal-close-btn:hover {
+    color: #d32f2f;
+}
+
+/* ----- Cancel & Message Modals ----- */
+.cancel-modal, .message-modal {
+    min-width: 360px;
+    max-width: 480px;
+}
+.modal-form-group {
+    margin-bottom: 1rem;
+}
+.modal-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.3rem;
+    font-size: 0.88rem;
+}
+.modal-form-group select,
+.modal-input {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    transition: border-color 0.2s;
+}
+.modal-form-group select:focus,
+.modal-input:focus,
+.modal-textarea:focus {
+    border-color: #1565c0;
+    outline: none;
+}
+.modal-textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.btn-confirm-cancel {
+    display: block;
+    width: 100%;
+    padding: 0.7rem;
+    background: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-confirm-cancel:hover {
+    background: #b71c1c;
+}
+.btn-send-msg {
+    display: block;
+    width: 100%;
+    padding: 0.7rem;
+    background: #1B5E20;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-send-msg:hover {
+    background: #145218;
+}
+.quick-msg-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+}
+.quick-msg-btn {
+    background: #e8f5e9;
+    color: #1B5E20;
+    border: 1px solid #a5d6a7;
+    border-radius: 16px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+.quick-msg-btn:hover {
+    background: #1B5E20;
+    color: #fff;
+}
+.btn-message {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: #e8f5e9;
+    color: #1B5E20;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-message:hover {
+    background: #1B5E20;
+    color: #fff;
+}
+
+/* Cancel reason badge in cancelled table */
+.cancel-reason-badge {
+    display: inline-block;
+    background: #fce4ec;
+    color: #c62828;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Cancel & Advice info on status page */
+.status-detail.cancel-info .status-label {
+    color: #c62828;
+}
+.status-detail.cancel-info .status-value {
+    color: #c62828;
+    font-weight: 600;
+}
+.status-detail.advice-info {
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.3rem;
+}
+.status-detail.advice-info .status-label {
+    color: #1B5E20;
+}
+.status-detail.advice-info .status-value {
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+/* ----- AI Suggestions on Status Page ----- */
+
+/* ----- Camera Modal ----- */
+.camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+.camera-modal.active {
+    display: flex;
+}
+.camera-modal-content {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+.camera-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.camera-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+}
+.camera-close {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: #888;
+    line-height: 1;
+}
+.camera-close:hover {
+    color: #c62828;
+}
+#camera-video {
+    width: 100%;
+    border-radius: 10px;
+    background: #000;
+}
+.camera-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+.btn-secondary {
+    padding: 0.6rem 1.5rem;
+    border: 2px solid #888;
+    border-radius: 8px;
+    background: var(--white);
+    color: #555;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-secondary:hover {
+    background: #eee;
+}
+
+/* ----- Thumbnail Images ----- */
+.thumb-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
+    transition: transform 0.2s;
+}
+.thumb-img:hover {
+    transform: scale(2.5);
+    z-index: 100;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.status-thumb {
+    width: 80px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    margin-top: 0.2rem;
+}
+
+/* ----- Analytics Section ----- */
+.analytics-summary {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.analytics-stat {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.2rem 2rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    min-width: 140px;
+    border-top: 4px solid var(--dark-green);
+}
+.analytics-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--dark-green);
+}
+.analytics-label {
+    font-size: 0.85rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+.chart-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+.chart-card h3 {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
 /* Completed Table */
 .table-completed thead {
     background: #388E3C;
@@ -866,6 +1559,32 @@ img {
         padding: 1.5rem 1.2rem;
     }
 
+    .status-card-body {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .action-btns {
+        flex-wrap: wrap;
+    }
+
+    .status-select, .assign-select, .assign-select-sm {
+        font-size: 0.75rem;
+    }
+
+    .admin-table th, .admin-table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-summary {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .trust-points {
         grid-template-columns: 1fr 1fr;
     }
@@ -899,6 +1618,15 @@ img {
 
     .trust-points {
         grid-template-columns: 1fr;
+    }
+
+    .status-card-body {
+        grid-template-columns: 1fr;
+    }
+
+    .status-card-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
