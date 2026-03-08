@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sri Sai Electrical &amp; AC Works{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+                <li><a href="{{ url_for('services') }}" class="nav-link {% if request.endpoint == 'services' %}active{% endif %}">Services</a></li>
+                <li><a href="{{ url_for('request_repair') }}" class="nav-link {% if request.endpoint == 'request_repair' %}active{% endif %}">Request Repair</a></li>
+                <li><a href="{{ url_for('spare_parts') }}" class="nav-link {% if request.endpoint == 'spare_parts' %}active{% endif %}">Spare Parts</a></li>
+                <li><a href="{{ url_for('location') }}" class="nav-link {% if request.endpoint == 'location' %}active{% endif %}">Location</a></li>
+                <li><a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
+                <li><a href="{{ url_for('admin_login') }}" class="nav-link btn-login {% if request.endpoint == 'admin_login' %}active{% endif %}">Admin Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

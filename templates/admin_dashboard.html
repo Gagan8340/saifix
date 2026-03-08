@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, {{ session.get('admin_name', 'Admin') }} &nbsp;|&nbsp; <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a></p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="dashboard-content">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card summary-pending">
+            <h3>{{ pending_requests|length }}</h3>
+            <p>Pending Requests</p>
+        </div>
+        <div class="summary-card summary-completed">
+            <h3>{{ completed_requests|length }}</h3>
+            <p>Completed</p>
+        </div>
+        <div class="summary-card">
+            <h3>{{ spare_parts|length }}</h3>
+            <p>Spare Parts</p>
+        </div>
+    </div>
+
+    <!-- Pending Repair Requests -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">&#128221; Pending Requests</h2>
+        {% if pending_requests %}
+        <div class="table-responsive">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Customer Name</th>
+                        <th>Mobile Number</th>
+                        <th>Appliance Type</th>
+                        <th>Problem Type</th>
+                        <th>Address</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in pending_requests %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ req['customer_name'] }}</td>
+                        <td>{{ req['mobile_number'] }}</td>
+                        <td>{{ req['appliance_type'] }}</td>
+                        <td>{{ req['problem_type'] }}</td>
+                        <td>{{ req['address'] }}</td>
+                        <td>{{ req['request_time'] }}</td>
+                        <td class="action-btns">
+                            <form method="POST" action="{{ url_for('complete_request', id=req['id']) }}" onsubmit="return confirm('Mark this request as completed?');">
+                                <button type="submit" class="btn-complete" title="Mark as Completed">&#10003;</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this request permanently?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#10005;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No pending requests. All caught up! &#127881;</p>
+        {% endif %}
+    </div>
+
+    <!-- Completed Requests History -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">&#9989; Completed History</h2>
+        {% if completed_requests %}
+        <div class="table-responsive">
+            <table class="dash-table table-completed">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Customer Name</th>
+                        <th>Mobile Number</th>
+                        <th>Appliance Type</th>
+                        <th>Problem Type</th>
+                        <th>Requested</th>
+                        <th>Completed</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in completed_requests %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ req['customer_name'] }}</td>
+                        <td>{{ req['mobile_number'] }}</td>
+                        <td>{{ req['appliance_type'] }}</td>
+                        <td>{{ req['problem_type'] }}</td>
+                        <td>{{ req['request_time'] }}</td>
+                        <td>{{ req['completed_time'] }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this completed record?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#10005;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No completed requests yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Spare Parts Section -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">Spare Parts Inventory</h2>
+
+        <!-- Add Spare Part Form -->
+        <div class="add-form-card">
+            <h3>Add New Spare Part</h3>
+            <form method="POST" action="{{ url_for('add_spare_part') }}" class="add-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <input type="text" id="category" name="category" placeholder="e.g. AC" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="part_name">Part Name</label>
+                        <input type="text" id="part_name" name="part_name" placeholder="e.g. Compressor" required>
+                    </div>
+                    <div class="form-group form-btn-group">
+                        <button type="submit" class="btn-add">+ Add Part</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if spare_parts %}
+        <div class="table-responsive">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category</th>
+                        <th>Part Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for part in spare_parts %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ part['category'] }}</td>
+                        <td>{{ part['part_name'] }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('delete_spare_part', id=part['id']) }}" onsubmit="return confirm('Delete this spare part?');">
+                                <button type="submit" class="btn-delete" title="Delete">&#10005;</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="empty-msg">No spare parts in inventory.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

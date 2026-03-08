@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    
+    <h1>Sri Sai Electrical &amp; Air Conditioning Works &amp; Spare Parts</h1>
+    <p>Your trusted repair service since 2002.</p>
+    <a href="{{ url_for('request_repair') }}" class="hero-btn">Request a Repair</a>
+</section>
+
+<!-- About Our Service -->
+<section class="section" id="about">
+    <h2 class="section-title">About Our Service</h2>
+    <div class="bilingual-row">
+        <div class="about-block">
+            <h3 class="lang-label">English</h3>
+            <p>Sri Sai Electrical &amp; Air Conditioning Works was established in 2002 by <strong>Sanagala Dwaraka Narayana</strong>, a highly experienced and dedicated technician based in Nuzvid. With more than two decades of hands-on experience in repairing air conditioners, refrigerators, and washing machines, he has built a reputation for reliable service and accurate problem diagnosis.</p>
+            <p>Over the years, his passion for technical work and commitment to customer satisfaction have helped the business grow steadily. Today, the service team continues to provide trusted repair services and genuine spare parts to customers in and around the region.</p>
+            <p>Customers can confidently rely on the experience and professionalism of our technicians. Once a repair request is submitted through this website, our team will review the request and contact you within <strong>12 hours</strong>.</p>
+            <p>After the confirmation call, the service visit will usually be scheduled within <strong>24 to 48 hours</strong>, depending on the service location and availability.</p>
+            <p>To help us serve everyone efficiently, we kindly request customers to submit their repair request through the website and wait for our team to contact you. Our team will reach out as soon as possible to assist you.</p>
+        </div>
+        <div class="about-block about-block-telugu">
+            <h3 class="lang-label">తెలుగు</h3>
+            <p>శ్రీ సాయి ఎలక్ట్రికల్ & ఎయిర్ కండిషనింగ్ వర్క్స్ సంస్థను 2002 సంవత్సరంలో <strong>శ్రీ సనగాల ద్వారకా నారాయణ</strong> గారు ప్రారంభించారు. నూజివీడు ప్రాంతంలో అనుభవజ్ఞుడైన మరియు నిబద్ధత గల టెక్నీషియన్‌గా ఆయన పేరు సంపాదించారు. ఎయిర్ కండిషనర్లు, ఫ్రిజ్‌లు మరియు వాషింగ్ మెషీన్ల మరమ్మతుల్లో రెండు దశాబ్దాలకుపైగా అనుభవంతో విశ్వసనీయమైన సేవలు మరియు ఖచ్చితమైన సమస్య గుర్తింపు ద్వారా మంచి పేరును పొందారు.</p>
+            <p>ఈ సంవత్సరాల పాటు ఆయనకు ఉన్న సాంకేతిక పనిపై ఆసక్తి మరియు కస్టమర్ సంతృప్తిపై ఉన్న నిబద్ధత వలన ఈ వ్యాపారం నిరంతరం అభివృద్ధి చెందుతూ వచ్చింది. ప్రస్తుతం కూడా మా సేవా బృందం ప్రాంతంలోని కస్టమర్లకు నమ్మకమైన మరమ్మత్తు సేవలు మరియు నాణ్యమైన స్పేర్ పార్ట్స్ అందిస్తోంది.</p>
+            <p>మా టెక్నీషియన్ల అనుభవం మరియు నైపుణ్యంపై కస్టమర్లు పూర్తి విశ్వాసంతో ఉండవచ్చు. ఈ వెబ్‌సైట్ ద్వారా మీరు రిపేర్ రిక్వెస్ట్ పంపిన తర్వాత, మా బృందం దానిని పరిశీలించి <strong>12 గంటలలోపు</strong> మీకు కాల్ ద్వారా సంప్రదిస్తుంది.</p>
+            <p>ఆ కాల్ తరువాత, సాధారణంగా <strong>24 నుండి 48 గంటల</strong> లోపల మీ వద్దకు వచ్చి సేవను అందిస్తాము. ఇది మీ ప్రాంతం మరియు సేవల అందుబాటుపై ఆధారపడి ఉంటుంది.</p>
+            <p>మా సేవలు అందరికీ సమర్థవంతంగా అందించేందుకు, దయచేసి రిపేర్ రిక్వెస్ట్‌ను ఈ వెబ్‌సైట్ ద్వారా పంపి, మా బృందం మీను సంప్రదించే వరకు వేచి ఉండండి. మా బృందం వీలైనంత త్వరగా మీకు సహాయం చేయడానికి ప్రయత్నిస్తుంది.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="section section-alt" id="why-us">
+    <h2 class="section-title">Why Choose Us</h2>
+    <div class="trust-points">
+        <div class="trust-item">
+            <span class="trust-icon">&#128197;</span>
+            <p>Serving customers since 2002</p>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">&#128736;</span>
+            <p>Experienced and skilled technicians</p>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">&#9989;</span>
+            <p>Reliable repair service</p>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">&#128295;</span>
+            <p>Genuine spare parts</p>
+        </div>
+        <div class="trust-item">
+            <span class="trust-icon">&#11088;</span>
+            <p>Trusted by local customers</p>
+        </div>
+    </div>
+</section>
+
+<!-- Important Notice -->
+<section class="section" id="notice">
+    <h2 class="section-title">Important Notice / ముఖ్య గమనిక</h2>
+    <div class="bilingual-row">
+        <div class="notice-card">
+            <h3 class="lang-label">English</h3>
+            <ul class="notice-list">
+                <li>After submitting your request, our team will contact you within <strong>12 hours</strong>.</li>
+                <li>Once the call is completed, service will be scheduled within <strong>24–48 hours</strong>.</li>
+                <li>Please avoid making repeated calls after submitting a request.</li>
+            </ul>
+        </div>
+        <div class="notice-card notice-card-telugu">
+            <h3 class="lang-label">తెలుగు</h3>
+            <ul class="notice-list">
+                <li>రిపేర్ రిక్వెస్ట్ పంపిన తర్వాత <strong>12 గంటలలోపు</strong> మా బృందం మీకు కాల్ చేస్తుంది.</li>
+                <li>ఆ కాల్ అనంతరం <strong>24 నుండి 48 గంటలలోపు</strong> సేవ అందించబడుతుంది.</li>
+                <li>దయచేసి రిక్వెస్ట్ పంపిన తర్వాత పదేపదే కాల్ చేయకుండా సహకరించండి.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}

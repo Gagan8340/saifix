@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Spare Parts{% endblock %}
+
+{% block content %}
+<!-- Page Hero -->
+<section class="hero hero-sm">
+    <h1>Spare Parts Catalog</h1>
+    <p>Browse our inventory of genuine spare parts for AC, Refrigerator, and Washing Machine repairs.</p>
+</section>
+
+<section class="section">
+    <!-- Search Bar -->
+    <div class="parts-search">
+        <input type="text" id="partsSearch" placeholder="Search spare parts..." autocomplete="off">
+    </div>
+    <div id="searchNoResults" class="search-no-results" style="display:none;">No spare parts found matching your search.</div>
+
+    <!-- Category Filter Tabs -->
+    <div class="parts-filter">
+        <button class="filter-btn active" data-category="all">All</button>
+        {% for category in categories %}
+        <button class="filter-btn" data-category="{{ category }}">{{ category }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Parts by Category -->
+    {% for category in categories %}
+    <div class="parts-category" data-category="{{ category }}">
+        <h2 class="category-title">{{ category }}</h2>
+        <ul class="parts-list">
+            {% for part in parts_by_category[category] %}
+            <li class="part-item">{{ part }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const categories = document.querySelectorAll('.parts-category');
+    const searchInput = document.getElementById('partsSearch');
+    const noResults = document.getElementById('searchNoResults');
+
+    // Category filter
+    filterBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            filterBtns.forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+
+            // Clear search when switching category
+            searchInput.value = '';
+
+            const selected = btn.getAttribute('data-category');
+
+            categories.forEach(function (cat) {
+                // Show all items within each category
+                cat.querySelectorAll('.part-item').forEach(function (item) {
+                    item.style.display = '';
+                });
+
+                if (selected === 'all' || cat.getAttribute('data-category') === selected) {
+                    cat.style.display = '';
+                } else {
+                    cat.style.display = 'none';
+                }
+            });
+            noResults.style.display = 'none';
+        });
+    });
+
+    // Instant search filter
+    searchInput.addEventListener('input', function () {
+        const query = searchInput.value.trim().toLowerCase();
+        let anyVisible = false;
+
+        // Get active category filter
+        const activeBtn = document.querySelector('.filter-btn.active');
+        const activeCategory = activeBtn ? activeBtn.getAttribute('data-category') : 'all';
+
+        categories.forEach(function (cat) {
+            const catName = cat.getAttribute('data-category');
+            const inActiveCategory = (activeCategory === 'all' || catName === activeCategory);
+
+            if (!inActiveCategory) {
+                cat.style.display = 'none';
+                return;
+            }
+
+            let catHasMatch = false;
+            cat.querySelectorAll('.part-item').forEach(function (item) {
+                const text = item.textContent.toLowerCase();
+                if (query === '' || text.indexOf(query) !== -1) {
+                    item.style.display = '';
+                    catHasMatch = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            cat.style.display = catHasMatch ? '' : 'none';
+            if (catHasMatch) anyVisible = true;
+        });
+
+        noResults.style.display = anyVisible || query === '' ? 'none' : 'block';
+    });
+});
+</script>
+{% endblock %}

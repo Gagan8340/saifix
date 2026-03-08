@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Our Location{% endblock %}
+
+{% block content %}
+<!-- Page Hero -->
+<section class="hero hero-sm">
+    <h1>Our Location</h1>
+    <p>Visit us at our shop for walk-in repairs, consultations, and spare parts.</p>
+</section>
+
+<section class="section">
+    <div class="location-wrapper">
+        <!-- Embedded Google Map -->
+        <div class="map-container">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1000!2d80.8443!3d16.7889!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a3675d06ac3873f%3A0x26a1d7137e80a9b0!2sSai%20Electrical%20and%20Air%20Conditioning%20Works%20and%20Spares!5e0!3m2!1sen!2sin!4v1700000000000"
+                width="100%"
+                height="450"
+                style="border:0;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+        <!-- Get Directions Button -->
+        <div class="location-actions">
+            <a href="https://maps.app.goo.gl/GT3Go6E48FCs6XFL7" target="_blank" rel="noopener noreferrer" class="btn-directions">
+                <span class="directions-icon">&#9906;</span> Get Directions
+            </a>
+        </div>
+
+        <!-- Shop Info -->
+        <div class="location-info cards-grid">
+            <div class="card">
+                <h3>&#128205; Address</h3>
+                <p>Sri Sai Electrical &amp; Air Conditioning Works<br>Nuzvid, Krishna District<br>Andhra Pradesh, India</p>
+            </div>
+            <div class="card">
+                <h3>&#128338; Working Hours</h3>
+                <p>Monday – Saturday: 9:00 AM – 8:00 PM<br>Sunday: 10:00 AM – 5:00 PM</p>
+            </div>
+            <div class="card">
+                <h3>&#128222; Contact</h3>
+                <p>Walk in for instant service or call us to schedule an appointment.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
