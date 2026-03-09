@@ -27,7 +27,7 @@ TELEGRAM_BOT_TOKEN = '8744342892:AAH1QpBRvjcMGNj0NmPAeLBRkFipXdl1hn4'
 TELEGRAM_CHAT_ID = '6744959005'
 
 
-def send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address):
+def send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address, problem_description=''):
     """Send a Telegram message to the shop owner about a new repair request."""
     message = (
         f"\U0001F527 *New Repair Request*\n"
@@ -37,6 +37,7 @@ def send_telegram_notification(customer_name, mobile_number, appliance_type, pro
         f"\U0001F3E0 *Address:* {address}\n"
         f"\U0001F4BB *Appliance:* {appliance_type}\n"
         f"\U000026A0 *Problem:* {problem_type}\n"
+        f"\U0001F4DD *Description:* {problem_description or 'N/A'}\n"
         f"\n"
         f"Please follow up with the customer soon."
     )
@@ -330,13 +331,19 @@ def request_repair():
     if request.method == 'POST':
         customer_name = request.form.get('customer_name', '').strip()
         mobile_raw = request.form.get('mobile_number', '').strip()
+        confirm_raw = request.form.get('confirm_mobile', '').strip()
         address = request.form.get('address', '').strip()
         appliance_type = request.form.get('appliance_type', '').strip()
         problem_type = request.form.get('problem_type', '').strip()
-        description = request.form.get('description', '').strip()
+        problem_description = request.form.get('problem_description', '').strip()
+
+        # Enforce 2000 character limit on problem description
+        if len(problem_description) > 2000:
+            problem_description = problem_description[:2000]
 
         # Strip any spaces, dashes, or +91 prefix the user may have typed
         digits = re.sub(r'[^0-9]', '', mobile_raw)
+        confirm_digits = re.sub(r'[^0-9]', '', confirm_raw)
         if digits.startswith('91') and len(digits) == 12:
             digits = digits[2:]
         if digits.startswith('0'):
@@ -345,6 +352,11 @@ def request_repair():
         # Validate: exactly 10 digits, starts with 6-9
         if not re.match(r'^[6-9]\d{9}$', digits):
             flash('Please enter a valid 10-digit Indian mobile number.', 'error')
+            return render_template('request_repair.html')
+
+        # Validate: confirm number matches
+        if digits != confirm_digits:
+            flash('Mobile numbers do not match. Please check again.', 'error')
             return render_template('request_repair.html')
 
         mobile_number = '+91' + digits
@@ -370,7 +382,13 @@ def request_repair():
         file = request.files.get('image')
         if file and file.filename:
             if not allowed_file(file.filename):
-                flash('Only JPG, JPEG, and PNG images are allowed.', 'error')
+                flash('Only JPG, JPEG, and PNG image files are allowed.', 'error')
+                return render_template('request_repair.html')
+            file.seek(0, 2)
+            size = file.tell()
+            file.seek(0)
+            if size > 5 * 1024 * 1024:
+                flash('File size must be 5 MB or less.', 'error')
                 return render_template('request_repair.html')
             ext = file.filename.rsplit('.', 1)[1].lower()
             safe_name = uuid.uuid4().hex + '.' + ext
@@ -381,17 +399,45 @@ def request_repair():
             '''INSERT INTO service_requests
                (customer_name, mobile_number, address, appliance_type, problem_type, description, image_path)
                VALUES (?, ?, ?, ?, ?, ?, ?)''',
-            (customer_name, mobile_number, address, appliance_type, problem_type, description, image_path)
+            (customer_name, mobile_number, address, appliance_type, problem_type, problem_description, image_path)
         )
         db.commit()
 
         # Send Telegram notification to shop owner
-        send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address)
+        send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address, problem_description)
 
         flash('Your repair request has been submitted successfully. Our team will contact you within 24 hours.', 'success')
         return redirect(url_for('request_repair'))
 
     return render_template('request_repair.html')
+
+
+@app.route('/api/check-duplicate', methods=['POST'])
+def api_check_duplicate():
+    """Check if a repair request exists for the given mobile number within 24 hours."""
+    import json as _json
+    mobile_raw = request.form.get('mobile', '').strip()
+    digits = re.sub(r'[^0-9]', '', mobile_raw)
+    if digits.startswith('91') and len(digits) == 12:
+        digits = digits[2:]
+    if digits.startswith('0'):
+        digits = digits[1:]
+    if not re.match(r'^[6-9]\d{9}$', digits):
+        return app.response_class(
+            response=_json.dumps({'exists': False}),
+            status=200, mimetype='application/json'
+        )
+    mobile_number = '+91' + digits
+    db = get_db()
+    cutoff = (datetime.now() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
+    existing = db.execute(
+        'SELECT id FROM service_requests WHERE mobile_number = ? AND request_time >= ?',
+        (mobile_number, cutoff)
+    ).fetchone()
+    return app.response_class(
+        response=_json.dumps({'exists': bool(existing)}),
+        status=200, mimetype='application/json'
+    )
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])

@@ -1,7 +1,9 @@
 ﻿{% extends "base.html" %}
 
 {% block title %}Sri Sai Electrical &amp; AC Works â€” Request Repair{% endblock %}
-
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
 {% block content %}
 <!-- Page Hero -->
 <section class="hero hero-sm">
@@ -38,8 +40,31 @@
             </div>
 
             <div class="form-group">
+                <label for="confirm_mobile">Re-enter Mobile Number</label>
+                <div class="mobile-input-wrapper">
+                    <span class="mobile-prefix">+91</span>
+                    <input type="tel" id="confirm_mobile" name="confirm_mobile" placeholder="Re-enter mobile number to verify" maxlength="10" autocomplete="off" required>
+                </div>
+                <small class="field-hint" id="confirm-mobile-error"></small>
+            </div>
+
+            <div class="form-group">
                 <label for="address">Address / Area</label>
-                <textarea id="address" name="address" rows="3" placeholder="Enter your address or area" required></textarea>
+                <div class="location-picker">
+                    <div class="location-search-row">
+                        <input type="text" id="address" name="address" placeholder="Search address or area..." autocomplete="off" required>
+                        <button type="button" class="location-btn" id="use-location-btn" title="Use current location">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="8"/></svg>
+                            <span>My Location</span>
+                        </button>
+                    </div>
+                    <div class="location-autocomplete" id="address-suggestions"></div>
+                    <small class="field-hint" id="location-status"></small>
+                    <div class="location-map-container" id="map-container" style="display:none;">
+                        <div id="location-map"></div>
+                        <small class="field-hint">Drag the marker or tap the map to adjust location</small>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -54,12 +79,19 @@
 
             <div class="form-group">
                 <label for="problem_type">Problem Type</label>
-                <input type="text" id="problem_type" name="problem_type" placeholder="e.g. Not cooling, noise issue, leaking" required>
+                <select id="problem_type" name="problem_type" required disabled>
+                    <option value="" disabled selected>Select appliance type first</option>
+                </select>
             </div>
 
             <div class="form-group">
-                <label for="description">Problem Description <span class="optional">(optional)</span></label>
-                <textarea id="description" name="description" rows="4" placeholder="Describe the issue in detail (optional)"></textarea>
+                <label for="problem_description">Problem Description <span class="optional">(optional)</span></label>
+                <textarea id="problem_description" name="problem_description" rows="4" maxlength="2000" placeholder="Describe your issue briefly (optional)"></textarea>
+                <div class="description-footer">
+                    <small class="field-hint" id="desc-hint">Describe your issue (max 400 words).</small>
+                    <small class="char-counter" id="desc-counter">0 / 2000</small>
+                </div>
+                <small class="field-hint field-hint-error" id="desc-limit-error" style="display:none;"></small>
             </div>
 
             <div class="form-group">
@@ -105,13 +137,41 @@
 <script>
 (function() {
     const mobileInput = document.getElementById('mobile_number');
+    const confirmInput = document.getElementById('confirm_mobile');
     const mobileError = document.getElementById('mobile-error');
+    const confirmError = document.getElementById('confirm-mobile-error');
     const form = document.querySelector('.repair-form');
 
-    // Only allow digits
+    // Block spaces and non-digit keys on both inputs
+    function blockNonDigits(e) {
+        if (e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            return;
+        }
+    }
+    mobileInput.addEventListener('keydown', blockNonDigits);
+    confirmInput.addEventListener('keydown', blockNonDigits);
+
+    // Also block paste of spaces / non-digits
+    function cleanPaste(e) {
+        e.preventDefault();
+        var text = (e.clipboardData || window.clipboardData).getData('text');
+        var digits = text.replace(/[^0-9]/g, '');
+        document.execCommand('insertText', false, digits);
+    }
+    mobileInput.addEventListener('paste', cleanPaste);
+    confirmInput.addEventListener('paste', cleanPaste);
+
+    // Strip non-digits on input
     mobileInput.addEventListener('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
         validateMobile();
+        validateConfirm();
+    });
+
+    confirmInput.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        validateConfirm();
     });
 
     function validateMobile() {
@@ -119,27 +179,176 @@
         if (val.length === 0) {
             mobileError.textContent = '';
             mobileError.className = 'field-hint';
+            clearDuplicateBlock();
             return false;
         }
         if (val.length < 10) {
             mobileError.textContent = 'Please enter a valid 10-digit Indian mobile number.';
             mobileError.className = 'field-hint field-hint-error';
+            clearDuplicateBlock();
             return false;
         }
         if (!/^[6-9]/.test(val)) {
             mobileError.textContent = 'Indian mobile numbers must start with 6, 7, 8, or 9.';
             mobileError.className = 'field-hint field-hint-error';
+            clearDuplicateBlock();
             return false;
         }
         mobileError.textContent = '\u2713 Valid number';
         mobileError.className = 'field-hint field-hint-ok';
+        checkDuplicate(val);
         return true;
     }
 
+    function validateConfirm() {
+        const val = confirmInput.value;
+        if (val.length === 0) {
+            confirmError.textContent = '';
+            confirmError.className = 'field-hint';
+            return false;
+        }
+        if (val !== mobileInput.value) {
+            confirmError.textContent = 'Mobile numbers do not match. Please check again.';
+            confirmError.className = 'field-hint field-hint-error';
+            return false;
+        }
+        confirmError.textContent = '\u2713 Number verified.';
+        confirmError.className = 'field-hint field-hint-ok';
+        return true;
+    }
+
+    // --- Duplicate Request Check ---
+    var duplicateBlocked = false;
+    var duplicateBanner = null;
+
+    function checkDuplicate(digits) {
+        var body = new FormData();
+        body.append('mobile', digits);
+        fetch('{{ url_for("api_check_duplicate") }}', { method: 'POST', body: body })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.exists) {
+                    showDuplicateBlock();
+                } else {
+                    clearDuplicateBlock();
+                }
+            })
+            .catch(function() { clearDuplicateBlock(); });
+    }
+
+    function showDuplicateBlock() {
+        duplicateBlocked = true;
+        if (!duplicateBanner) {
+            duplicateBanner = document.createElement('div');
+            duplicateBanner.className = 'flash error duplicate-banner';
+            duplicateBanner.textContent = 'You have already submitted a repair request in the last 24 hours. Please wait before creating another request.';
+            form.parentNode.insertBefore(duplicateBanner, form);
+        }
+        // Disable all form fields except mobile inputs
+        var fields = form.querySelectorAll('input:not(#mobile_number):not(#confirm_mobile), select, textarea, button[type=submit]');
+        fields.forEach(function(el) { el.disabled = true; });
+        form.querySelector('button[type=submit]').style.opacity = '0.5';
+    }
+
+    function clearDuplicateBlock() {
+        duplicateBlocked = false;
+        if (duplicateBanner) {
+            duplicateBanner.remove();
+            duplicateBanner = null;
+        }
+        // Re-enable fields
+        var fields = form.querySelectorAll('input:not(#mobile_number):not(#confirm_mobile), select, textarea, button[type=submit]');
+        fields.forEach(function(el) { el.disabled = false; });
+        // Problem type dropdown should stay disabled if no appliance selected
+        if (!document.getElementById('appliance_type').value) {
+            document.getElementById('problem_type').disabled = true;
+        }
+        form.querySelector('button[type=submit]').style.opacity = '';
+    }
+
+    // --- Dynamic Problem Type Dropdown ---
+    var problemMap = {
+        'Air Conditioner': ['Not Cooling', 'Water Leakage', 'Gas Refill Needed', 'Noise Issue', 'Remote Not Working'],
+        'Refrigerator': ['Not Cooling', 'Ice Build-up', 'Water Leakage', 'Compressor Problem', 'Door Not Closing'],
+        'Washing Machine': ['Not Spinning', 'Water Not Draining', 'Drum Noise', 'Power Issue', 'Water Leakage']
+    };
+
+    var applianceSelect = document.getElementById('appliance_type');
+    var problemSelect = document.getElementById('problem_type');
+
+    applianceSelect.addEventListener('change', function() {
+        var problems = problemMap[this.value] || [];
+        problemSelect.innerHTML = '<option value="" disabled selected>Select problem type</option>';
+        problems.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            problemSelect.appendChild(opt);
+        });
+        problemSelect.disabled = false;
+    });
+
+    // --- Description Character/Word Counter ---
+    var descArea = document.getElementById('problem_description');
+    var descCounter = document.getElementById('desc-counter');
+    var descHint = document.getElementById('desc-hint');
+    var descError = document.getElementById('desc-limit-error');
+    var MAX_CHARS = 2000;
+
+    descArea.addEventListener('input', function() {
+        var len = this.value.length;
+        var words = this.value.trim() ? this.value.trim().split(/\s+/).length : 0;
+        descCounter.textContent = len + ' / ' + MAX_CHARS;
+
+        if (words > 400 || len > MAX_CHARS) {
+            descCounter.style.color = '#d32f2f';
+            descError.textContent = words > 400 ? 'Exceeded 400-word limit. Please shorten your description.' : 'Exceeded 2000-character limit.';
+            descError.style.display = '';
+        } else {
+            descCounter.style.color = '';
+            descError.style.display = 'none';
+        }
+    });
+
     form.addEventListener('submit', function(e) {
+        if (duplicateBlocked) {
+            e.preventDefault();
+            return;
+        }
         if (!validateMobile()) {
             e.preventDefault();
             mobileInput.focus();
+            return;
+        }
+        if (!validateConfirm()) {
+            e.preventDefault();
+            confirmInput.focus();
+            return;
+        }
+        // Validate description limits
+        var descVal = descArea.value;
+        var wc = descVal.trim() ? descVal.trim().split(/\s+/).length : 0;
+        if (wc > 400 || descVal.length > MAX_CHARS) {
+            e.preventDefault();
+            descArea.focus();
+            descError.textContent = wc > 400 ? 'Exceeded 400-word limit. Please shorten your description.' : 'Exceeded 2000-character limit.';
+            descError.style.display = '';
+            return;
+        }
+        // Validate image file
+        if (imageInvalid) {
+            e.preventDefault();
+            previewEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        if (imageInput.files && imageInput.files[0]) {
+            var fileErr = validateFile(imageInput.files[0]);
+            if (fileErr) {
+                e.preventDefault();
+                previewEl.innerHTML = '<span class="field-hint field-hint-error">' + fileErr + '</span>';
+                imageInput.value = '';
+                return;
+            }
         }
     });
 
@@ -157,11 +366,31 @@
     const canvas = document.getElementById('camera-canvas');
     let stream = null;
 
+    var ALLOWED_TYPES = ['image/jpeg', 'image/png'];
+    var ALLOWED_EXTS = ['.jpg', '.jpeg', '.png'];
+    var MAX_FILE_SIZE = 5 * 1024 * 1024;
+    var imageInvalid = false;
+
+    function validateFile(file) {
+        var name = file.name.toLowerCase();
+        var extOk = ALLOWED_EXTS.some(function(ext) { return name.endsWith(ext); });
+        if (!extOk || ALLOWED_TYPES.indexOf(file.type) === -1) {
+            return 'Only JPG, JPEG, and PNG image files are allowed.';
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            return 'File size must be 5 MB or less.';
+        }
+        return null;
+    }
+
     function showPreview(file) {
         previewEl.innerHTML = '';
+        imageInvalid = false;
         if (!file) { uploadOpts.style.display = ''; return; }
-        if (file.size > 5 * 1024 * 1024) {
-            previewEl.innerHTML = '<span class="field-hint field-hint-error">File too large (max 5 MB)</span>';
+        var err = validateFile(file);
+        if (err) {
+            previewEl.innerHTML = '<span class="field-hint field-hint-error">' + err + '</span>';
+            imageInvalid = true;
             return false;
         }
         const reader = new FileReader();
@@ -186,6 +415,7 @@
         imageInput.value = '';
         previewEl.innerHTML = '';
         uploadOpts.style.display = '';
+        imageInvalid = false;
     }
 
     function retakeImage() {
@@ -196,7 +426,9 @@
     // File chooser
     imageInput.addEventListener('change', function() {
         if (this.files && this.files[0]) {
-            if (!showPreview(this.files[0])) this.value = '';
+            if (!showPreview(this.files[0])) {
+                this.value = '';
+            }
         }
     });
 
@@ -262,6 +494,182 @@
     cameraModal.addEventListener('click', function(e) {
         if (e.target === cameraModal) closeCameraModal();
     });
+})();
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function() {
+    var addressInput = document.getElementById('address');
+    var suggestionsEl = document.getElementById('address-suggestions');
+    var locationBtn = document.getElementById('use-location-btn');
+    var mapContainer = document.getElementById('map-container');
+    var statusEl = document.getElementById('location-status');
+    var map = null;
+    var marker = null;
+    var searchTimer = null;
+
+    // Default center: Nuzvid, Andhra Pradesh
+    var defaultLat = 16.7895;
+    var defaultLng = 81.2115;
+
+    function initMap(lat, lng) {
+        if (map) {
+            map.setView([lat, lng], 16);
+            marker.setLatLng([lat, lng]);
+            mapContainer.style.display = 'block';
+            return;
+        }
+        mapContainer.style.display = 'block';
+        map = L.map('location-map', { scrollWheelZoom: true }).setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+        // Fix tile rendering after container shown
+        setTimeout(function() { map.invalidateSize(); }, 200);
+
+        marker.on('dragend', function() {
+            var pos = marker.getLatLng();
+            reverseGeocode(pos.lat, pos.lng);
+        });
+
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng);
+        });
+    }
+
+    function reverseGeocode(lat, lng) {
+        setStatus('Fetching address...', '');
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1&accept-language=en')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.display_name) {
+                    addressInput.value = data.display_name;
+                    setStatus('\u2713 Address updated from map', 'ok');
+                } else {
+                    setStatus('Could not find address for this location', 'error');
+                }
+            })
+            .catch(function() {
+                setStatus('Network error. Please type address manually.', 'error');
+            });
+    }
+
+    function setStatus(text, type) {
+        statusEl.textContent = text;
+        statusEl.className = 'field-hint' + (type === 'ok' ? ' field-hint-ok' : type === 'error' ? ' field-hint-error' : '');
+    }
+
+    // --- Use Current Location ---
+    locationBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            setStatus('Geolocation is not supported by your browser.', 'error');
+            return;
+        }
+        locationBtn.disabled = true;
+        setStatus('Detecting your location...', '');
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                locationBtn.disabled = false;
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                initMap(lat, lng);
+                reverseGeocode(lat, lng);
+            },
+            function(err) {
+                locationBtn.disabled = false;
+                if (err.code === 1) {
+                    setStatus('Location permission denied. Please allow location access or type your address.', 'error');
+                } else {
+                    setStatus('Unable to detect location. Please type your address.', 'error');
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
+
+    // --- Address Autocomplete via Nominatim ---
+    addressInput.addEventListener('input', function() {
+        var query = addressInput.value.trim();
+        clearTimeout(searchTimer);
+        if (query.length < 3) {
+            hideSuggestions();
+            return;
+        }
+        searchTimer = setTimeout(function() {
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&countrycodes=in&limit=5&addressdetails=1&accept-language=en')
+                .then(function(r) { return r.json(); })
+                .then(function(results) {
+                    if (!results || results.length === 0) {
+                        hideSuggestions();
+                        return;
+                    }
+                    showSuggestions(results);
+                })
+                .catch(function() {
+                    hideSuggestions();
+                });
+        }, 400);
+    });
+
+    function showSuggestions(results) {
+        suggestionsEl.innerHTML = '';
+        results.forEach(function(item) {
+            var div = document.createElement('div');
+            div.className = 'location-autocomplete-item';
+            div.textContent = item.display_name;
+            div.addEventListener('click', function() {
+                addressInput.value = item.display_name;
+                hideSuggestions();
+                initMap(parseFloat(item.lat), parseFloat(item.lon));
+                setStatus('\u2713 Location selected', 'ok');
+            });
+            suggestionsEl.appendChild(div);
+        });
+        suggestionsEl.classList.add('active');
+    }
+
+    function hideSuggestions() {
+        suggestionsEl.classList.remove('active');
+        suggestionsEl.innerHTML = '';
+    }
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!suggestionsEl.contains(e.target) && e.target !== addressInput) {
+            hideSuggestions();
+        }
+    });
+
+    // Keyboard navigation for suggestions
+    var activeIdx = -1;
+    addressInput.addEventListener('keydown', function(e) {
+        var items = suggestionsEl.querySelectorAll('.location-autocomplete-item');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIdx = Math.min(activeIdx + 1, items.length - 1);
+            updateActive(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIdx = Math.max(activeIdx - 1, 0);
+            updateActive(items);
+        } else if (e.key === 'Enter' && activeIdx >= 0) {
+            e.preventDefault();
+            items[activeIdx].click();
+            activeIdx = -1;
+        }
+    });
+
+    function updateActive(items) {
+        items.forEach(function(el, i) {
+            el.classList.toggle('active', i === activeIdx);
+        });
+    }
 })();
 </script>
 {% endblock %}

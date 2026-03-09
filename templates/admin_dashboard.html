@@ -312,12 +312,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
 (function() {
-    const COLORS = ['#1B5E20','#D4A017','#1565c0','#6a1b9a','#e65100','#c62828','#00897b','#5d4037'];
+    const COLORS = ['#006039','#C6A961','#1565c0','#6a1b9a','#e65100','#c62828','#00897b','#5d4037'];
     const STATUS_COLORS = {
         'Pending': '#e65100',
         'Technician Assigned': '#1565c0',
         'In Progress': '#6a1b9a',
-        'Completed': '#2e7d32',
+        'Completed': '#006039',
         'Cancelled': '#c62828'
     };
 
@@ -348,7 +348,7 @@
                     datasets: [{
                         label: 'Requests',
                         data: data.month_counts,
-                        backgroundColor: '#1B5E20',
+                        backgroundColor: '#006039',
                         borderRadius: 6
                     }]
                 },
