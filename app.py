@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+
 import re
 import sqlite3
 import uuid
@@ -8,6 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'saifix_secret_key_2026'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB max upload
@@ -23,8 +26,10 @@ def allowed_file(filename):
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db')
 
 # --------------- Telegram Bot Config ---------------
-TELEGRAM_BOT_TOKEN = '8744342892:AAH1QpBRvjcMGNj0NmPAeLBRkFipXdl1hn4'
-TELEGRAM_CHAT_ID = '6744959005'
+import os
+
+TELEGRAM_BOT_TOKEN = os.getenv("8744342892:AAEy2qNSZb-7spiMZN0un_3z4BxRZQl_Oqc")
+TELEGRAM_CHAT_ID = os.getenv("6744959005")
 
 
 def send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address, problem_description=''):
