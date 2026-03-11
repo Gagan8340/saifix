@@ -28,8 +28,8 @@ DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.db
 # --------------- Telegram Bot Config ---------------
 import os
 
-TELEGRAM_BOT_TOKEN = os.getenv("8744342892:AAEy2qNSZb-7spiMZN0un_3z4BxRZQl_Oqc")
-TELEGRAM_CHAT_ID = os.getenv("6744959005")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
 def send_telegram_notification(customer_name, mobile_number, appliance_type, problem_type, address, problem_description=''):
