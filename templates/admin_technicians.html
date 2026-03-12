@@ -85,7 +85,7 @@
                         <td class="action-btns">
                             <button type="submit" form="edit-form-{{ tech['id'] }}" class="btn-complete" title="Save Changes">&#10003;</button>
                             <form method="POST" action="{{ url_for('delete_technician', id=tech['id']) }}" onsubmit="return confirm('Delete this technician? They will be unassigned from all requests.');">
-                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                                <button type="submit" class="btn-delete" title="Delete">&times;</button>
                             </form>
                         </td>
                     </tr>

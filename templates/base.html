@@ -22,8 +22,8 @@
                 <li><a href="{{ url_for('services') }}" class="nav-link {% if request.endpoint == 'services' %}active{% endif %}">Services</a></li>
                 <li><a href="{{ url_for('request_repair') }}" class="nav-link {% if request.endpoint == 'request_repair' %}active{% endif %}">Request Repair</a></li>
                 <li><a href="{{ url_for('spare_parts') }}" class="nav-link {% if request.endpoint == 'spare_parts' %}active{% endif %}">Spare Parts</a></li>
-                <li><a href="{{ url_for('location') }}" class="nav-link {% if request.endpoint == 'location' %}active{% endif %}">Location</a></li>
                 <li><a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
+                <li><a href="{{ url_for('reviews') }}" class="nav-link {% if request.endpoint == 'reviews' %}active{% endif %}">Reviews</a></li>
                 <li><a href="{{ url_for('check_status') }}" class="nav-link {% if request.endpoint == 'check_status' %}active{% endif %}">Check Status</a></li>
                 <li><a href="{{ url_for('admin_login') }}" class="nav-link btn-login {% if request.endpoint == 'admin_login' %}active{% endif %}">Admin Login</a></li>
             </ul>

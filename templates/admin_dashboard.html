@@ -7,6 +7,7 @@
     <h1>Admin Dashboard</h1>
     <p>Welcome, {{ session.get('admin_name', 'Admin') }} &nbsp;|&nbsp;
         <a href="{{ url_for('manage_technicians') }}" class="logout-link">Manage Technicians</a> &nbsp;|&nbsp;
+        <a href="{{ url_for('admin_feedback') }}" class="logout-link">Customer Feedback</a> &nbsp;|&nbsp;
         <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a>
     </p>
 </div>
@@ -44,7 +45,7 @@
 
     <!-- Active Repair Requests -->
     <div class="dash-section">
-        <h2 class="dash-section-title">&#128221; Active Requests</h2>
+        <h2 class="dash-section-title">Active Requests</h2>
         {% if active_requests %}
         <div class="table-responsive">
             <table class="dash-table">
@@ -93,7 +94,7 @@
                         <td>
                             {% if req['technician_name'] %}
                                 <span class="tech-badge">{{ req['technician_name'] }}</span>
-                                <div class="tech-phone">📞 {{ req['technician_phone'] }}</div>
+                                <div class="tech-phone">{{ req['technician_phone'] }}</div>
                             {% else %}
                                 <form method="POST" action="{{ url_for('assign_technician', id=req['id']) }}" class="inline-form">
                                     <select name="technician_id" class="assign-select" onchange="this.form.submit()">
@@ -123,7 +124,7 @@
                             <button type="button" class="btn-cancel" title="Cancel Request" onclick="openCancelModal({{ req['id'] }})">&#10007;</button>
                             <button type="button" class="btn-message" title="Send Advice" onclick="openMessageModal({{ req['id'] }})">&#9993;</button>
                             <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('DELETE permanently?');">
-                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                                <button type="submit" class="btn-delete" title="Delete">&times;</button>
                             </form>
                         </td>
                     </tr>
@@ -132,13 +133,13 @@
             </table>
         </div>
         {% else %}
-        <p class="empty-msg">No active requests. All caught up! &#127881;</p>
+        <p class="empty-msg">No active requests. All caught up!</p>
         {% endif %}
     </div>
 
     <!-- Completed Requests History -->
     <div class="dash-section">
-        <h2 class="dash-section-title">&#9989; Completed History</h2>
+        <h2 class="dash-section-title">Completed History</h2>
         {% if completed_requests %}
         <div class="table-responsive">
             <table class="dash-table table-completed">
@@ -166,7 +167,7 @@
                         <td class="nowrap">{{ req['completed_time'][:16] if req['completed_time'] else '' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete this record?');">
-                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                                <button type="submit" class="btn-delete" title="Delete">&times;</button>
                             </form>
                         </td>
                     </tr>
@@ -182,7 +183,7 @@
     <!-- Cancelled Requests -->
     {% if cancelled_requests %}
     <div class="dash-section">
-        <h2 class="dash-section-title">&#10060; Cancelled Requests</h2>
+        <h2 class="dash-section-title">Cancelled Requests</h2>
         <div class="table-responsive">
             <table class="dash-table table-cancelled">
                 <thead>
@@ -209,7 +210,7 @@
                         <td class="nowrap">{{ req['request_time'][:16] if req['request_time'] else '' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('delete_request', id=req['id']) }}" onsubmit="return confirm('Delete permanently?');">
-                                <button type="submit" class="btn-delete" title="Delete">&#128465;</button>
+                                <button type="submit" class="btn-delete" title="Delete">&times;</button>
                             </form>
                         </td>
                     </tr>
@@ -277,7 +278,7 @@
 
     <!-- Service Analytics -->
     <div class="dash-section">
-        <h2 class="dash-section-title">&#128202; Service Analytics</h2>
+        <h2 class="dash-section-title">Service Analytics</h2>
         <div class="analytics-summary" id="analytics-summary">
             <div class="analytics-stat">
                 <span class="analytics-number" id="stat-total">—</span>
@@ -400,7 +401,7 @@
 <div class="modal-overlay" id="cancelModal" onclick="if(event.target===this)closeCancelModal()">
     <div class="modal-box cancel-modal">
         <div class="modal-header">
-            <strong>&#10060; Cancel Request</strong>
+            <strong>Cancel Request</strong>
             <button class="modal-close-btn" onclick="closeCancelModal()">&times;</button>
         </div>
         <form id="cancelForm" method="POST">
@@ -431,7 +432,7 @@
 <div class="modal-overlay" id="messageModal" onclick="if(event.target===this)closeMessageModal()">
     <div class="modal-box message-modal">
         <div class="modal-header">
-            <strong>&#9993; Send Advice to Customer</strong>
+            <strong>Send Advice to Customer</strong>
             <button class="modal-close-btn" onclick="closeMessageModal()">&times;</button>
         </div>
         <form id="messageForm" method="POST">
@@ -448,7 +449,7 @@
                 <label for="adminMsg">Your Message</label>
                 <textarea name="admin_message" id="adminMsg" class="modal-textarea" rows="3" placeholder="Type your advice or message to the customer..." required></textarea>
             </div>
-            <button type="submit" class="btn-send-msg">&#9993; Send Message</button>
+            <button type="submit" class="btn-send-msg">Send Message</button>
         </form>
     </div>
 </div>

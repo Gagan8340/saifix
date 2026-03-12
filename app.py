@@ -157,6 +157,21 @@ def init_db():
         )
     ''')
 
+    # --- Feedback table ---
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_id INTEGER NOT NULL UNIQUE,
+            customer_name TEXT NOT NULL,
+            technician_name TEXT,
+            rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+            comment TEXT,
+            is_approved INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (request_id) REFERENCES service_requests(id)
+        )
+    ''')
+
     db.commit()
 
     # --- Seed Admins (only if table is empty) ---
@@ -300,6 +315,23 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/reviews')
+def reviews():
+    db = get_db()
+    reviews = db.execute(
+        """SELECT f.customer_name, f.rating, f.comment, f.created_at,
+                  f.technician_name, sr.appliance_type
+           FROM feedback f
+           JOIN service_requests sr ON f.request_id = sr.id
+           WHERE f.is_approved = 1
+           ORDER BY f.created_at DESC"""
+    ).fetchall()
+    avg_rating = 0
+    if reviews:
+        avg_rating = round(sum(r['rating'] for r in reviews) / len(reviews), 1)
+    return render_template('reviews.html', reviews=reviews, avg_rating=avg_rating)
+
+
 @app.route('/services')
 def services():
     return render_template('services.html')
@@ -319,11 +351,6 @@ def spare_parts():
             parts_by_category[cat] = []
         parts_by_category[cat].append(row['part_name'])
     return render_template('spare_parts.html', categories=categories, parts_by_category=parts_by_category)
-
-
-@app.route('/location')
-def location():
-    return render_template('location.html')
 
 
 @app.route('/contact')
@@ -415,6 +442,22 @@ def request_repair():
         return redirect(url_for('request_repair'))
 
     return render_template('request_repair.html')
+
+
+@app.route('/api/platform-stats')
+def api_platform_stats():
+    """Return platform statistics for the stats cards."""
+    db = get_db()
+    customers = db.execute('SELECT COUNT(DISTINCT mobile_number) AS cnt FROM service_requests').fetchone()['cnt']
+    technicians = db.execute('SELECT COUNT(*) AS cnt FROM technicians').fetchone()['cnt']
+    total_requests = db.execute('SELECT COUNT(*) AS cnt FROM service_requests').fetchone()['cnt']
+    completed = db.execute("SELECT COUNT(*) AS cnt FROM service_requests WHERE status = 'Completed'").fetchone()['cnt']
+    return jsonify({
+        'customers': customers,
+        'technicians': technicians,
+        'total_requests': total_requests,
+        'completed': completed
+    })
 
 
 @app.route('/api/check-duplicate', methods=['POST'])
@@ -755,6 +798,107 @@ def delete_technician(id):
     return redirect(url_for('manage_technicians'))
 
 
+# --------------- Feedback Routes ---------------
+
+@app.route('/feedback/submit/<int:request_id>', methods=['POST'])
+def submit_feedback(request_id):
+    rating = request.form.get('rating', '').strip()
+    comment = request.form.get('comment', '').strip()
+
+    if not rating or not rating.isdigit() or int(rating) < 1 or int(rating) > 5:
+        flash('Please select a rating between 1 and 5.', 'error')
+        return redirect(url_for('check_status'))
+
+    rating = int(rating)
+    if len(comment) > 500:
+        comment = comment[:500]
+
+    db = get_db()
+    # Verify the request exists and is completed
+    req = db.execute(
+        """SELECT sr.customer_name, t.name AS technician_name
+           FROM service_requests sr
+           LEFT JOIN technicians t ON sr.technician_id = t.id
+           WHERE sr.id = ? AND sr.status = 'Completed'""",
+        (request_id,)
+    ).fetchone()
+
+    if not req:
+        flash('Feedback can only be given for completed requests.', 'error')
+        return redirect(url_for('check_status'))
+
+    # Check if feedback already exists
+    existing = db.execute('SELECT id FROM feedback WHERE request_id = ?', (request_id,)).fetchone()
+    if existing:
+        flash('You have already submitted feedback for this request.', 'error')
+        return redirect(url_for('check_status'))
+
+    db.execute(
+        'INSERT INTO feedback (request_id, customer_name, technician_name, rating, comment) VALUES (?, ?, ?, ?, ?)',
+        (request_id, req['customer_name'], req['technician_name'], rating, comment)
+    )
+    db.commit()
+    flash('Thank you for your feedback! Your review will appear on our website after approval.', 'success')
+    return redirect(url_for('check_status'))
+
+
+@app.route('/admin/feedback')
+def admin_feedback():
+    if not session.get('admin_logged_in'):
+        flash('Please login first.', 'error')
+        return redirect(url_for('admin_login'))
+
+    db = get_db()
+    all_feedback = db.execute(
+        """SELECT f.*, sr.appliance_type, sr.problem_type
+           FROM feedback f
+           JOIN service_requests sr ON f.request_id = sr.id
+           ORDER BY f.created_at DESC"""
+    ).fetchall()
+
+    stats = db.execute(
+        """SELECT COUNT(*) as total,
+                  ROUND(AVG(rating), 1) as avg_rating,
+                  SUM(CASE WHEN is_approved = 1 THEN 1 ELSE 0 END) as approved_count
+           FROM feedback"""
+    ).fetchone()
+
+    return render_template('admin_feedback.html', feedback_list=all_feedback, stats=stats)
+
+
+@app.route('/admin/feedback/approve/<int:id>', methods=['POST'])
+def approve_feedback(id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    db = get_db()
+    db.execute('UPDATE feedback SET is_approved = 1 WHERE id = ?', (id,))
+    db.commit()
+    flash('Feedback approved and will now appear on the homepage.', 'success')
+    return redirect(url_for('admin_feedback'))
+
+
+@app.route('/admin/feedback/hide/<int:id>', methods=['POST'])
+def hide_feedback(id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    db = get_db()
+    db.execute('UPDATE feedback SET is_approved = 0 WHERE id = ?', (id,))
+    db.commit()
+    flash('Feedback hidden from homepage.', 'success')
+    return redirect(url_for('admin_feedback'))
+
+
+@app.route('/admin/feedback/delete/<int:id>', methods=['POST'])
+def delete_feedback(id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    db = get_db()
+    db.execute('DELETE FROM feedback WHERE id = ?', (id,))
+    db.commit()
+    flash('Feedback deleted.', 'success')
+    return redirect(url_for('admin_feedback'))
+
+
 # --------------- Customer Status Check ---------------
 
 @app.route('/check-status', methods=['GET', 'POST'])
@@ -777,9 +921,11 @@ def check_status():
         mobile_display = digits
         db = get_db()
         results = db.execute(
-            """SELECT sr.*, t.name AS technician_name, t.phone_number AS technician_phone
+            """SELECT sr.*, t.name AS technician_name, t.phone_number AS technician_phone,
+                      f.id AS feedback_id, f.rating AS feedback_rating
                FROM service_requests sr
                LEFT JOIN technicians t ON sr.technician_id = t.id
+               LEFT JOIN feedback f ON f.request_id = sr.id
                WHERE sr.mobile_number = ?
                ORDER BY sr.id DESC""",
             (mobile_number,)

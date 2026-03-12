@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Sri Sai Electrical &amp; AC Works — Manage Feedback{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Customer Feedback</h1>
+    <p>Welcome, {{ session.get('admin_name', 'Admin') }} &nbsp;|&nbsp;
+        <a href="{{ url_for('admin_dashboard') }}" class="logout-link">Dashboard</a> &nbsp;|&nbsp;
+        <a href="{{ url_for('admin_logout') }}" class="logout-link">Logout</a>
+    </p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="dashboard-content">
+    <!-- Stats Cards -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <h3>{{ stats['total'] or 0 }}</h3>
+            <p>Total Reviews</p>
+        </div>
+        <div class="summary-card summary-completed">
+            <h3>{{ stats['avg_rating'] or '—' }}</h3>
+            <p>Average Rating</p>
+        </div>
+        <div class="summary-card summary-pending">
+            <h3>{{ stats['approved_count'] or 0 }}</h3>
+            <p>Published</p>
+        </div>
+        <div class="summary-card summary-technicians">
+            <h3>{{ (stats['total'] or 0) - (stats['approved_count'] or 0) }}</h3>
+            <p>Pending Review</p>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="dash-section">
+        <h2 class="dash-section-title">All Customer Reviews</h2>
+        {% if feedback_list %}
+        <div class="feedback-admin-grid">
+            {% for fb in feedback_list %}
+            <div class="feedback-admin-card {% if fb['is_approved'] %}feedback-approved{% else %}feedback-pending{% endif %}">
+                <div class="feedback-admin-header">
+                    <div>
+                        <strong>{{ fb['customer_name'] }}</strong>
+                        <span class="feedback-admin-date">{{ fb['created_at'][:10] if fb['created_at'] else '' }}</span>
+                    </div>
+                    <span class="feedback-admin-status {% if fb['is_approved'] %}badge-approved{% else %}badge-pending{% endif %}">
+                        {{ 'Published' if fb['is_approved'] else 'Pending' }}
+                    </span>
+                </div>
+                <div class="feedback-admin-stars">
+                    {% for i in range(1, 6) %}
+                        <span class="star {% if i <= fb['rating'] %}star-filled{% endif %}">&#9733;</span>
+                    {% endfor %}
+                    <span class="feedback-admin-rating">{{ fb['rating'] }}/5</span>
+                </div>
+                <div class="feedback-admin-meta">
+                    <span>{{ fb['appliance_type'] }}</span>
+                    {% if fb['technician_name'] %}
+                    <span>&bull; Technician: {{ fb['technician_name'] }}</span>
+                    {% endif %}
+                </div>
+                {% if fb['comment'] %}
+                <p class="feedback-admin-comment">"{{ fb['comment'] }}"</p>
+                {% endif %}
+                <div class="feedback-admin-actions">
+                    {% if not fb['is_approved'] %}
+                    <form method="POST" action="{{ url_for('approve_feedback', id=fb['id']) }}" style="display:inline;">
+                        <button type="submit" class="btn-primary btn-sm">Approve</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('hide_feedback', id=fb['id']) }}" style="display:inline;">
+                        <button type="submit" class="btn-secondary btn-sm">Hide</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('delete_feedback', id=fb['id']) }}" style="display:inline;" onsubmit="return confirm('Delete this feedback?');">
+                        <button type="submit" class="btn-delete btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-msg">No feedback received yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

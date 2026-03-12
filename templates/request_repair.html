@@ -11,6 +11,28 @@
     <p>Submit your service complaint below. No account or login required.</p>
 </section>
 
+<!-- Platform Statistics -->
+<section class="section platform-stats-section">
+    <div class="platform-stats">
+        <div class="stat-card">
+            <span class="stat-number" id="stat-customers">0</span>
+            <span class="stat-label">Customers Served</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="stat-technicians">0</span>
+            <span class="stat-label">Technicians</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="stat-requests">0</span>
+            <span class="stat-label">Service Requests</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number" id="stat-completed">0</span>
+            <span class="stat-label">Completed</span>
+        </div>
+    </div>
+</section>
+
 <section class="section">
     <div class="form-wrapper">
 
@@ -99,11 +121,11 @@
                 <div class="file-upload-wrapper">
                     <div class="upload-options">
                         <label class="upload-option-btn" for="image">
-                            &#128206; Choose File
+                            Choose File
                             <input type="file" id="image" name="image" accept=".jpg,.jpeg,.png" class="file-input-hidden">
                         </label>
                         <button type="button" class="upload-option-btn camera-btn" id="camera-btn">
-                            &#128247; Take Photo
+                            Take Photo
                         </button>
                         <!-- Hidden input for camera capture on mobile -->
                         <input type="file" id="camera-input" accept="image/jpeg,image/png" capture="environment" class="file-input-hidden" style="display:none">
@@ -116,13 +138,13 @@
                 <div class="camera-modal" id="camera-modal">
                     <div class="camera-modal-content">
                         <div class="camera-header">
-                            <h3>&#128247; Take a Photo</h3>
+                            <h3>Take a Photo</h3>
                             <button type="button" class="camera-close" id="camera-close">&times;</button>
                         </div>
                         <video id="camera-video" autoplay playsinline></video>
                         <canvas id="camera-canvas" style="display:none"></canvas>
                         <div class="camera-actions">
-                            <button type="button" class="btn-primary" id="camera-snap">&#128248; Capture</button>
+                            <button type="button" class="btn-primary" id="camera-snap">Capture</button>
                             <button type="button" class="btn-secondary" id="camera-cancel">Cancel</button>
                         </div>
                     </div>
@@ -399,8 +421,8 @@
                 '<div class="preview-container">' +
                     '<img src="' + e.target.result + '" class="upload-preview-img" alt="Preview">' +
                     '<div class="preview-actions">' +
-                        '<button type="button" class="preview-btn retake-btn" id="retake-btn">&#128247; Retake</button>' +
-                        '<button type="button" class="preview-btn delete-btn" id="delete-btn">&#128465; Remove</button>' +
+                        '<button type="button" class="preview-btn retake-btn" id="retake-btn">Retake</button>' +
+                        '<button type="button" class="preview-btn delete-btn" id="delete-btn">Remove</button>' +
                     '</div>' +
                 '</div>';
             uploadOpts.style.display = 'none';
@@ -669,6 +691,71 @@
         items.forEach(function(el, i) {
             el.classList.toggle('active', i === activeIdx);
         });
+    }
+})();
+</script>
+
+<script>
+(function() {
+    var animated = false;
+
+    function easeOutExpo(t) {
+        return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    }
+
+    function animateCount(el, target, delay) {
+        setTimeout(function() {
+            var card = el.closest('.stat-card');
+            if (card) card.classList.add('stat-visible');
+            if (target === 0) { el.textContent = '0'; return; }
+            var duration = 2200;
+            var startTime = null;
+            function step(ts) {
+                if (!startTime) startTime = ts;
+                var progress = Math.min((ts - startTime) / duration, 1);
+                var value = Math.floor(easeOutExpo(progress) * target);
+                el.textContent = value.toLocaleString('en-IN');
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.textContent = target.toLocaleString('en-IN');
+                }
+            }
+            requestAnimationFrame(step);
+        }, delay);
+    }
+
+    function loadStats() {
+        if (animated) return;
+        animated = true;
+        fetch('{{ url_for("api_platform_stats") }}')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var items = [
+                    ['stat-customers', data.customers],
+                    ['stat-technicians', data.technicians],
+                    ['stat-requests', data.total_requests],
+                    ['stat-completed', data.completed]
+                ];
+                items.forEach(function(item, i) {
+                    var el = document.getElementById(item[0]);
+                    if (el) animateCount(el, item[1], i * 180);
+                });
+            })
+            .catch(function() {});
+    }
+
+    var statsSection = document.querySelector('.platform-stats-section');
+    if (statsSection && 'IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting) {
+                loadStats();
+                observer.disconnect();
+            }
+        }, { threshold: 0.2 });
+        observer.observe(statsSection);
+    } else {
+        loadStats();
     }
 })();
 </script>

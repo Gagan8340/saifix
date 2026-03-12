@@ -57,7 +57,7 @@
                     </div>
                     <div class="status-detail">
                         <span class="status-label">Technician Phone</span>
-                        <span class="status-value"><a href="tel:{{ req['technician_phone'] }}">📞 {{ req['technician_phone'] }}</a></span>
+                        <span class="status-value"><a href="tel:{{ req['technician_phone'] }}">{{ req['technician_phone'] }}</a></span>
                     </div>
                     {% endif %}
                     {% if req['completed_time'] %}
@@ -80,7 +80,7 @@
                     {% endif %}
                     {% if req['admin_message'] %}
                     <div class="status-detail advice-info">
-                        <span class="status-label">&#9993; Advice from Shop</span>
+                        <span class="status-label">Advice from Shop</span>
                         <span class="status-value">{{ req['admin_message'] }}</span>
                     </div>
                     {% endif %}
@@ -91,6 +91,28 @@
                             <img src="{{ url_for('static', filename=req['image_path']) }}" class="status-thumb" alt="Appliance photo">
                         </a>
                     </div>
+                    {% endif %}
+
+                    {% if req['status'] == 'Completed' %}
+                        {% if req['feedback_id'] %}
+                        <div class="feedback-given-badge">
+                            <span>You rated this service {{ req['feedback_rating'] }}/5 — Thank you!</span>
+                        </div>
+                        {% else %}
+                        <div class="feedback-form-inline">
+                            <h4>Rate This Service</h4>
+                            <form method="POST" action="{{ url_for('submit_feedback', request_id=req['id']) }}">
+                                <div class="star-rating-input">
+                                    {% for i in range(5, 0, -1) %}
+                                    <input type="radio" id="star{{ i }}_{{ req['id'] }}" name="rating" value="{{ i }}" required>
+                                    <label for="star{{ i }}_{{ req['id'] }}" title="{{ i }} star{{ 's' if i > 1 else '' }}">&#9733;</label>
+                                    {% endfor %}
+                                </div>
+                                <textarea name="comment" rows="2" maxlength="500" placeholder="Share your experience (optional)"></textarea>
+                                <button type="submit" class="btn-primary btn-sm">Submit Feedback</button>
+                            </form>
+                        </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
